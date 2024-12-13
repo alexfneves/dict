@@ -1,9 +1,11 @@
 import tomllib
 
+from logging import info, error, warning
 from typing import Optional
 from functools import wraps
 from pathlib import Path
 from textual.theme import BUILTIN_THEMES
+from sys import exit
 
 
 def singleton(orig_cls):
@@ -30,17 +32,24 @@ class Config():
         self.theme: Optional[str] = None
 
         if data_path is not None:
-            self.data_path = data_path
-            self.config_path = Path.joinpath(self.data_path, "config.toml")
+            self.data_path = Path(data_path)
+            self.config_path = Path.joinpath(Path(self.data_path), "config.toml")
+
+        try:
+            self.data_path.mkdir(parents=True, exist_ok=True)
+        except Exception as e:
+            error(f"Failed to create folder {data_path}: {e}. Since the folder is necessary, the program will exit")
+            exit()
+
         try:
             f = open(self.config_path, 'rb')
         except FileNotFoundError:
-            print(f'Failed to load file {self.config_path}')
+            info(f'Failed to load file {self.config_path}. Using default configuration values.')
         else:
             toml_data: dict = tomllib.load(f)
             if 'theme' in toml_data.keys():
                 if toml_data['theme'] in BUILTIN_THEMES.keys():
                     self.theme = toml_data['theme']
                 else:
-                    print(f"Theme {toml_data['theme']} doesn't exist.")
+                    warning(f"Theme {toml_data['theme']} doesn't exist. Ignoring configuration.")
             f.close()
