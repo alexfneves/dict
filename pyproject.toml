@@ -9,6 +9,7 @@ readme = "README.md"
 python = "^3.11"
 textual = "^0.89.1"
 click = "^8.1.7"
+logging = "^0.4.9.6"
 
 [tool.poetry.scripts]
 dict = "dict.main:cli"

@@ -1,55 +1,69 @@
 import click
 
+from logging import debug, info, warning, basicConfig, DEBUG, INFO
 from dict.app import DictApp
 from dict.config import Config
 
-def config(data_path: str):
+
+def config(verbose: bool, very_very_verbose: bool, data_path: str):
+    if verbose:
+        basicConfig(level=INFO)
+    if very_very_verbose:
+        basicConfig(level=DEBUG)
     c = Config()
     c.load(data_path)
 
-def common_options(func):
+def option_data_path(func):
     """Decorator for common options."""
     func = click.option('--data-path', default=None, help='Path for the dict data folder')(func)
     return func
 
+def option_verbose(func):
+    func = click.option('-v', '--verbose', is_flag=True, help='Verbose')(func)
+    return func
+
+def option_very_very_verbose(func):
+    func = click.option('-vvv', '--very-very-verbose', is_flag=True, help='Very very verbose')(func)
+    return func
+
+def common_options(func):
+    return option_data_path(option_very_very_verbose(option_verbose(func)))
+
 @click.group(invoke_without_command=True)
 @click.pass_context
 @common_options
-def cli(ctx, data_path: str):
+def cli(ctx, verbose, very_very_verbose, data_path: str):
     if ctx.invoked_subcommand is None:
-        config(data_path)
-        c = Config()
-        click.echo('I was invoked without subcommand, app will be started')
+        config(verbose, very_very_verbose, data_path)
+        info('Invoked without subcommand, app will be executed')
         app = DictApp()
         app.run()
-    else:
-        click.echo(f"I am about to invoke {ctx.invoked_subcommand}")
 
 @cli.command()
 @common_options
-def app(data_path):
-    config(data_path)
-    click.echo('The subcommand app')
+def app(verbose, very_very_verbose, data_path):
+    config(verbose, very_very_verbose, data_path)
+    info('Executing app')
     app = DictApp()
     app.run()
 
 @cli.command()
 @common_options
 @click.argument('word')
-def search(data_path, word: str):
-    config(data_path)
-    click.echo(f'The subcommand search {word}')
+def search(verbose, very_very_verbose, data_path, word: str):
+    config(verbose, very_very_verbose, data_path)
+    info(f'Executing search {word}')
 
 @cli.command()
 @common_options
 @click.argument('word')
-def meaning(data_path, word: str):
-    config(data_path)
-    click.echo(f'The subcommand meaning {word}')
+def meaning(verbose, very_very_verbose, data_path, word: str):
+    config(verbose, very_very_verbose, data_path)
+    info(f'Executing meaning {word}')
 
 @cli.command()
 @common_options
 @click.argument('phrase')
-def play(data_path, phrase: str):
-    config(data_path)
-    click.echo(f'The subcommand play {phrase}')
+def play(verbose, very_very_verbose, data_path, phrase: str):
+    config(verbose, very_very_verbose, data_path)
+    info(f'Executing play {phrase}')
