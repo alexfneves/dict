@@ -52,9 +52,14 @@
                     echo "Entering dev shell of project dict"
                   '';
 
-                  scripts.dict.exec = ''
-                    poetry run dict "$@";
-                  '';
+                  scripts = {
+                    dict.exec = ''
+                      poetry run dict "$@";
+                    '';
+                    dict-dev.exec = ''
+                      textual run --dev "dict/main.py $@";
+                    '';
+                  };
                 }
               ];
             };

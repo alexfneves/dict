@@ -1,15 +1,17 @@
 import click
+from sys import exit
 
 from logging import debug, info, warning, basicConfig, DEBUG, INFO
+from textual.logging import TextualHandler
 from dict.app import DictApp
 from dict.config import Config
 
 
 def config(verbose: bool, very_very_verbose: bool, data_path: str):
     if verbose:
-        basicConfig(level=INFO)
+        basicConfig(level=INFO, handlers=[TextualHandler()])
     if very_very_verbose:
-        basicConfig(level=DEBUG)
+        basicConfig(level=DEBUG, handlers=[TextualHandler()])
     c = Config()
     c.load(data_path)
 
@@ -38,6 +40,7 @@ def cli(ctx, verbose, very_very_verbose, data_path: str):
         info('Invoked without subcommand, app will be executed')
         app = DictApp()
         app.run()
+        exit(app.return_code)
 
 @cli.command()
 @common_options
@@ -46,6 +49,7 @@ def app(verbose, very_very_verbose, data_path):
     info('Executing app')
     app = DictApp()
     app.run()
+    sys.exit(app.return_code)
 
 @cli.command()
 @common_options
@@ -67,3 +71,6 @@ def meaning(verbose, very_very_verbose, data_path, word: str):
 def play(verbose, very_very_verbose, data_path, phrase: str):
     config(verbose, very_very_verbose, data_path)
     info(f'Executing play {phrase}')
+
+if __name__ == "__main__":
+    cli()
