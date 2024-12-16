@@ -4,7 +4,7 @@ from sys import exit
 from logging import debug, info, warning, basicConfig, DEBUG, INFO
 from textual.logging import TextualHandler
 from dict.app import DictApp
-from dict.config import Config
+from dict.settings import Settings
 
 
 def config(verbose: bool, very_very_verbose: bool, data_path: str):
@@ -12,8 +12,8 @@ def config(verbose: bool, very_very_verbose: bool, data_path: str):
         basicConfig(level=INFO, handlers=[TextualHandler()])
     if very_very_verbose:
         basicConfig(level=DEBUG, handlers=[TextualHandler()])
-    c = Config()
-    c.load(data_path)
+    s = Settings()
+    s.load(data_path)
 
 def option_data_path(func):
     """Decorator for common options."""

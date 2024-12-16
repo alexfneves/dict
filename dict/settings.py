@@ -23,17 +23,17 @@ def singleton(orig_cls):
 
 
 @singleton
-class Config():
+class Settings():
     def load(self, data_path: str):
         self.language_input: str = "en"
         self.language_output: str = "en"
         self.data_path: str = Path.joinpath(Path.home(), ".dict")
-        self.config_path: str = Path.joinpath(self.data_path, "config.toml")
+        self.settings_path: str = Path.joinpath(self.data_path, "settings.toml")
         self.theme: Optional[str] = None
 
         if data_path is not None:
             self.data_path = Path(data_path)
-            self.config_path = Path.joinpath(Path(self.data_path), "config.toml")
+            self.settings_path = Path.joinpath(Path(self.data_path), "settings.toml")
 
         try:
             self.data_path.mkdir(parents=True, exist_ok=True)
@@ -42,9 +42,9 @@ class Config():
             exit()
 
         try:
-            f = open(self.config_path, 'rb')
+            f = open(self.settings_path, 'rb')
         except FileNotFoundError:
-            info(f'Failed to load file {self.config_path}. Using default configuration values.')
+            info(f'Failed to load file {self.settings_path}. Using default configuration values.')
         else:
             toml_data: dict = tomllib.load(f)
             if 'theme' in toml_data.keys():

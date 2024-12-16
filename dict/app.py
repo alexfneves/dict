@@ -5,11 +5,11 @@ from textual.widgets import Footer, Label, Tabs, Tab, TabbedContent, TabPane, Ma
 from textual.keys import Keys
 from textual.events import Key
 from textual.containers import Horizontal, Vertical, Container
-from dict.config import Config
+from dict.settings import Settings
 from sys import exit
 
 
-class File(TextArea):
+class DictText(TextArea):
     BINDINGS = [
         Binding("w", "select_word()", "Select word"),
         Binding("p", "play", "Play selection"),
@@ -27,6 +27,7 @@ class DictApp(App):
     BINDINGS = [
         Binding("1", "tab_meaning()", "Meaning"),
         Binding("2", "tab_translate()", "Translate"),
+        Binding("3", "tab_settings()", "Settings"),
         Binding("q", "quit()", "Quit"),
     ]
     CSS = """
@@ -38,11 +39,11 @@ class DictApp(App):
             layout: horizontal;
         }
         .box#hhhh {
-            height: 0.5fr;
+            height: 1fr;
             width: 0.1fr;
         }
         .box#file {
-            height: 0.5fr;
+            height: 1fr;
             width: 0.1fr;
         }
         Label#right-label {
@@ -55,9 +56,12 @@ class DictApp(App):
         self.tabs = TabbedContent(classes="box")
         self.meaning_tab = TabPane("Meaning", id="meaning", classes="box")
         self.translate_tab = TabPane("Translate", id="translate", classes="box")
+        self.settings_tab = TabPane("Settings", id="settings", classes="box")
         self.meaning = Markdown("asdf\n\n\n\n\n\n\n\n\n\nifgfgj", classes="box")
         self.meaning.styles.height = "1fr"
-        self.file = File("fdsa", id="file", classes="box", language="python", read_only=True)
+        self.file = DictText("fdsa", id="file", classes="box", language="python", read_only=True)
+        self.settings = Markdown("asdf\n\n\n\n\n\n\n\n\n\nifgfgj", classes="box")
+        self.settings.styles.height = "1fr"
         with self.tabs:
             with self.meaning_tab:
                 yield self.meaning
@@ -68,6 +72,8 @@ class DictApp(App):
                         Markdown("hhhh", id="hhhh", classes="box"),
                     ),
                 )
+            with self.settings_tab:
+                yield self.settings
         self.footer = Footer()
         self.footer.show_command_palette = False
         self.languages = Label("languages", id="right-label", classes="box")
@@ -77,9 +83,9 @@ class DictApp(App):
             yield self.languages
 
     def on_mount(self) -> None:
-        config = Config()
-        if config.theme is not None:
-            self.theme = config.theme
+        settings = Settings()
+        if settings.theme is not None:
+            self.theme = settings.theme
 
     def action_tab_meaning(self):
         self.set_focus(None)
@@ -88,8 +94,13 @@ class DictApp(App):
 
     def action_tab_translate(self):
         self.set_focus(None)
-        self.tabs.focus()
+        self.file.focus()
         self.tabs.active = "translate"
+
+    def action_tab_settings(self):
+        self.set_focus(None)
+        self.tabs.focus()
+        self.tabs.active = "settings"
 
     def action_quit(self):
         info("Request to quit the application")
