@@ -1,7 +1,8 @@
+from textual import on
 from logging import info, basicConfig, debug
 from textual.logging import TextualHandler
 from textual.app import App, ComposeResult, Binding
-from textual.widgets import Footer, Label, Tabs, Tab, TabbedContent, TabPane, Markdown, Static, Button, Checkbox, TextArea
+from textual.widgets import Footer, Label, Tabs, Tab, TabbedContent, TabPane, Markdown, Static, Button, Checkbox, TextArea, Select
 from textual.keys import Keys
 from textual.events import Key
 from textual.containers import Horizontal, Vertical, Container
@@ -53,6 +54,7 @@ class DictApp(App):
     """
 
     def compose(self) -> ComposeResult:
+        settings = Settings()
         self.tabs = TabbedContent(classes="box")
         self.meaning_tab = TabPane("Meaning", id="meaning", classes="box")
         self.translate_tab = TabPane("Translate", id="translate", classes="box")
@@ -73,10 +75,18 @@ class DictApp(App):
                     ),
                 )
             with self.settings_tab:
-                yield self.settings
+                yield Container(
+                    Vertical(
+                        Horizontal(
+                            Label("Locale"),
+                            Select([(k, v) for k, v in Settings.LOCALES.items()], value=settings.locale, allow_blank=False, id="locale")
+                        )
+                    )
+                )
+                # yield self.settings
         self.footer = Footer()
         self.footer.show_command_palette = False
-        self.languages = Label("languages", id="right-label", classes="box")
+        self.languages = Label(f"\[{settings.locale}]", id="right-label", classes="box")
         with Horizontal(id="footer-outer", classes="box"):
             with Horizontal(id="footer-inner", classes="box"):
                 yield self.footer
@@ -111,6 +121,11 @@ class DictApp(App):
 
     def action_open(self) -> None:
         info("Open file")
+
+    @on(Select.Changed)
+    def select_changed(self, event: Select.Changed) -> None:
+        if event.select.id == "locale":
+            self.languages.update(f"\[{event.value}]")
 
     def on_tabbed_content_tab_activated(
         self, event: TabbedContent.TabActivated

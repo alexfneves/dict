@@ -24,6 +24,12 @@ def singleton(orig_cls):
 
 @singleton
 class Settings():
+    LOCALES = {
+        "English": "en",
+        "Português (Brasil)": "pt_br",
+        "Dansk": "da",
+    }
+
     def load(self, data_path: str):
         self.language_input: str = "en"
         self.language_output: str = "en"
@@ -52,4 +58,12 @@ class Settings():
                     self.theme = toml_data['theme']
                 else:
                     warning(f"Theme {toml_data['theme']} doesn't exist. Ignoring configuration.")
+            if 'locale' in toml_data.keys():
+                if toml_data['locale'] in Settings.LOCALES.values():
+                    self.locale = toml_data['locale']
+                else:
+                    warning(f"Locale {toml_data['locale']} is not defined. Ignoring configuration and setting it to en.")
+                    self.locale = "en"
+            else:
+                self.locale = "en"
             f.close()
