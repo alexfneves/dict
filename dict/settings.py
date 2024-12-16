@@ -1,4 +1,5 @@
 import tomllib
+import tomli_w
 
 from logging import info, error, warning
 from typing import Optional
@@ -52,18 +53,32 @@ class Settings():
         except FileNotFoundError:
             info(f'Failed to load file {self.settings_path}. Using default configuration values.')
         else:
-            toml_data: dict = tomllib.load(f)
-            if 'theme' in toml_data.keys():
-                if toml_data['theme'] in BUILTIN_THEMES.keys():
-                    self.theme = toml_data['theme']
+            self.toml_data: dict = tomllib.load(f)
+            if 'theme' in self.toml_data.keys():
+                if self.toml_data['theme'] in BUILTIN_THEMES.keys():
+                    self.theme = self.toml_data['theme']
                 else:
-                    warning(f"Theme {toml_data['theme']} doesn't exist. Ignoring configuration.")
-            if 'locale' in toml_data.keys():
-                if toml_data['locale'] in Settings.LOCALES.values():
-                    self.locale = toml_data['locale']
+                    warning(f"Theme {self.toml_data['theme']} doesn't exist. Ignoring configuration.")
+            if 'locale' in self.toml_data.keys():
+                if self.toml_data['locale'] in Settings.LOCALES.values():
+                    self.locale = self.toml_data['locale']
                 else:
                     warning(f"Locale {toml_data['locale']} is not defined. Ignoring configuration and setting it to en.")
                     self.locale = "en"
             else:
                 self.locale = "en"
             f.close()
+
+    def set_locale(self, locale: str) -> bool:
+        if locale not in Settings.LOCALES.values():
+            info("Can't save locale {locale} because it's not available.")
+            return False
+        try:
+            f = open(self.settings_path, 'wb')
+        except FileNotFoundError:
+            info(f'Failed to open file {self.settings_path}. Giving up on saving settings.')
+            return False
+        self.toml_data["locale"] = locale
+        tomli_w.dump(self.toml_data, f)
+        f.close()
+        return True

@@ -126,6 +126,8 @@ class DictApp(App):
     def select_changed(self, event: Select.Changed) -> None:
         if event.select.id == "locale":
             self.languages.update(f"\[{event.value}]")
+            settings = Settings()
+            settings.set_locale(event.value)
 
     def on_tabbed_content_tab_activated(
         self, event: TabbedContent.TabActivated

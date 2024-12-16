@@ -12,6 +12,7 @@ click = "^8.1.7"
 logging = "^0.4.9.6"
 textual-dev = "^1.7.0"
 babel = "^2.16.0"
+tomli-w = "^1.1.0"
 
 [tool.poetry.scripts]
 dict = "dict.main:cli"
