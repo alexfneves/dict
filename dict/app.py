@@ -2,11 +2,12 @@ from textual import on
 from logging import info, basicConfig, debug
 from textual.logging import TextualHandler
 from textual.app import App, ComposeResult, Binding
-from textual.widgets import Footer, Label, Tabs, Tab, TabbedContent, TabPane, Markdown, Static, Button, Checkbox, TextArea, Select
+from textual.widgets import Footer, Label, Tabs, Tab, TabbedContent, TabPane, Markdown, Static, Button, Checkbox, TextArea, Select, Input, ListView, ListItem
 from textual.keys import Keys
 from textual.events import Key
 from textual.containers import Horizontal, Vertical, Container
 from dict.settings import Settings
+from dict.file_picker import FilePicker
 from sys import exit
 
 
@@ -61,7 +62,7 @@ class DictApp(App):
         self.settings_tab = TabPane("Settings", id="settings", classes="box")
         self.meaning = Markdown("asdf\n\n\n\n\n\n\n\n\n\nifgfgj", classes="box")
         self.meaning.styles.height = "1fr"
-        self.file = DictText("fdsa", id="file", classes="box", language="python", read_only=True)
+        self.file = DictText("", id="file", classes="box", language="python", read_only=True)
         self.settings = Markdown("asdf\n\n\n\n\n\n\n\n\n\nifgfgj", classes="box")
         self.settings.styles.height = "1fr"
         with self.tabs:
@@ -83,7 +84,6 @@ class DictApp(App):
                         )
                     )
                 )
-                # yield self.settings
         self.footer = Footer()
         self.footer.show_command_palette = False
         self.languages = Label(f"\[{settings.locale}]", id="right-label", classes="box")
@@ -121,7 +121,15 @@ class DictApp(App):
 
     def action_open(self) -> None:
         info("Open file")
+        self.file_picker = FilePicker()
 
+        def file_to_open(data: str | None) -> None:
+            if data is None:
+                return
+            self.file.text = data
+
+        self.push_screen(self.file_picker, file_to_open)
+    
     @on(Select.Changed)
     def select_changed(self, event: Select.Changed) -> None:
         if event.select.id == "locale":
