@@ -7,7 +7,8 @@ from textual.keys import Keys
 from textual.events import Key
 from textual.containers import Horizontal, Vertical, Container
 from dict.settings import Settings
-from dict.file_picker import FilePicker
+from dict.utils.files import list_files_recursively, file_content
+from dict.list_filter import ListFilter
 from sys import exit
 
 
@@ -121,14 +122,17 @@ class DictApp(App):
 
     def action_open(self) -> None:
         info("Open file")
-        self.file_picker = FilePicker()
+        self.list_filter = ListFilter(list_files_recursively())
 
         def file_to_open(data: str | None) -> None:
             if data is None:
                 return
-            self.file.text = data
+            file_text = file_content(data)
+            if file_text is None:
+                return
+            self.file.text = file_text
 
-        self.push_screen(self.file_picker, file_to_open)
+        self.push_screen(self.list_filter, file_to_open)
     
     @on(Select.Changed)
     def select_changed(self, event: Select.Changed) -> None:
