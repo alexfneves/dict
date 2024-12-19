@@ -2,28 +2,15 @@ from textual import on
 from logging import info, basicConfig, debug
 from textual.logging import TextualHandler
 from textual.app import App, ComposeResult, Binding
-from textual.widgets import Footer, Label, Tabs, Tab, TabbedContent, TabPane, Markdown, Static, Button, Checkbox, TextArea, Select, Input, ListView, ListItem
+from textual.widgets import Footer, Label, Tabs, Tab, TabbedContent, TabPane, Markdown, Static, Button, Checkbox, Select, Input, ListView, ListItem
 from textual.keys import Keys
 from textual.events import Key
 from textual.containers import Horizontal, Vertical, Container
 from dict.settings import Settings
+from dict.text import Text
 from dict.utils.files import list_files_recursively, file_content
 from dict.list_filter import ListFilter
 from sys import exit
-
-
-class DictText(TextArea):
-    BINDINGS = [
-        Binding("w", "select_word()", "Select word"),
-        Binding("p", "play", "Play selection"),
-    ]
-
-    def action_select_word(self):
-        info(self.cursor_location)
-        info(self.selection)
-
-    def action_play(self):
-        info("play")
 
 
 class DictApp(App):
@@ -63,7 +50,7 @@ class DictApp(App):
         self.settings_tab = TabPane("Settings", id="settings", classes="box")
         self.meaning = Markdown("asdf\n\n\n\n\n\n\n\n\n\nifgfgj", classes="box")
         self.meaning.styles.height = "1fr"
-        self.file = DictText("", id="file", classes="box", language="python", read_only=True)
+        self.file = Text("", id="file", classes="box", language="python", read_only=True)
         self.settings = Markdown("asdf\n\n\n\n\n\n\n\n\n\nifgfgj", classes="box")
         self.settings.styles.height = "1fr"
         with self.tabs:
