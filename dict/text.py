@@ -38,6 +38,10 @@ class Text(TextArea):
         Binding("j", "down", show=False),
         Binding("k", "up", show=False),
         Binding("l", "right", show=False),
+        Binding("H", "left_selecting", show=False),
+        Binding("J", "down_selecting", show=False),
+        Binding("K", "up_selecting", show=False),
+        Binding("L", "right_selecting", show=False),
         Binding("%", "select_all", "Select all"),
         Binding("w", "go_to_word_right", "Go to next word"),
         Binding("b", "go_to_word_left", "Go to previous word"),
@@ -107,6 +111,18 @@ class Text(TextArea):
 
     def action_right(self):
         self.action_cursor_right()
+
+    def action_left_selecting(self):
+        self.action_cursor_left(True)
+
+    def action_down_selecting(self):
+        self.action_cursor_down(True)
+
+    def action_up_selecting(self):
+        self.action_cursor_up(True)
+
+    def action_right_selecting(self):
+        self.action_cursor_right(True)
 
     def action_select_all(self):
         self.select_all()
