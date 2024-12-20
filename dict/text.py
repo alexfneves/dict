@@ -48,6 +48,11 @@ class Text(TextArea):
         Binding("p", "play", "Play selection"),
     ]
 
+    def __init__(self, *args, **kwargs):
+        # Ensure show_line_numbers is set to True
+        kwargs['show_line_numbers'] = True
+        super().__init__(*args, **kwargs)
+
     def find(self, word: bool, lines: List[str], init_row: int, init_col: int, to_right:bool) -> Tuple[int, int] | None:
         if to_right:
             direction = 1
