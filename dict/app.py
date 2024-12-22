@@ -1,5 +1,5 @@
 from textual import on
-from logging import info, basicConfig, debug
+from logging import basicConfig, debug
 from textual.logging import TextualHandler
 from textual.app import App, ComposeResult, Binding
 from textual.widgets import Footer, Label, Tabs, Tab, TabbedContent, TabPane, Markdown, Static, Button, Checkbox, Select, Input, ListView, ListItem
@@ -101,14 +101,28 @@ class DictApp(App):
         self.tabs.active = "settings"
 
     def action_quit(self):
-        info("Request to quit the application")
+        debug("Request to quit the application")
         self.exit()
 
     def action_search(self) -> None:
-        info("Search")
+        debug("Search")
+        self.list_filter = ListFilter([
+                                          "This",
+                                          "is",
+                                          "a",
+                                          "fake",
+                                          "dictionary",
+                                      ])
+
+        def selected_word(word: str | None) -> None:
+            if word is None:
+                return
+            self.meaning.text = word
+
+        self.push_screen(self.list_filter, selected_word)
 
     def action_open(self) -> None:
-        info("Open file")
+        debug("Open file")
         self.list_filter = ListFilter(list_files_recursively())
 
         def file_to_open(data: str | None) -> None:
@@ -120,7 +134,7 @@ class DictApp(App):
             self.file.text = file_text
 
         self.push_screen(self.list_filter, file_to_open)
-    
+
     @on(Select.Changed)
     def on_select_changed(self, event: Select.Changed) -> None:
         if event.select.id == "locale":
