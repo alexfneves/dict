@@ -4,6 +4,7 @@ from typing import Tuple, List
 from logging import debug
 from textual.app import Binding
 from textual.widgets import TextArea
+from textual.message import Message
 
 
 def is_symbol(char):
@@ -45,15 +46,21 @@ class Text(TextArea):
         Binding("%", "select_all", "Select all"),
         Binding("w", "go_to_word_right", "Go to next word"),
         Binding("b", "go_to_word_left", "Go to previous word"),
+        Binding("m", "meaning", "Word meaning"),
         Binding("p", "play", "Play selection"),
     ]
+
+    class GoToMeaning(Message):
+        def __init__(self, word: str) -> None:
+            self.word = word
+            super().__init__()
 
     def __init__(self, *args, **kwargs):
         # Ensure show_line_numbers is set to True
         kwargs['show_line_numbers'] = True
         super().__init__(*args, **kwargs)
 
-    def find(self, word: bool, lines: List[str], init_row: int, init_col: int, to_right:bool) -> Tuple[int, int] | None:
+    def find(self, word: bool, lines: List[str], init_row: int, init_col: int, to_right:bool, multiple_lines: bool=True) -> Tuple[int, int] | None:
         if to_right:
             direction = 1
             ran = range(init_row, len(lines))
@@ -77,6 +84,8 @@ class Text(TextArea):
                     return (r, c)
                 c = c + direction
             debug("Cursor is out of bounds.")
+            if not multiple_lines:
+                return (r,c)
         return None
 
     def go_to_word(self, to_right):
@@ -91,7 +100,7 @@ class Text(TextArea):
 
         if char_at_cursor is not None and (is_word_character(char_at_cursor) or is_word_hyphen(self.text, self.document.get_index_from_location((row, col)))):
             debug(f"is word at ({row}, {col})")
-            found = self.find(word=False, lines=lines, init_row=row, init_col=col, to_right=to_right)
+            found = self.find(word=False, lines=lines, init_row=row, init_col=col, to_right=to_right, multiple_lines=False)
             if found is None:
                 debug("Failed to find next non word")
                 return
@@ -104,6 +113,20 @@ class Text(TextArea):
         row, col = found
         debug(f"is word at ({row}, {col})")
         self.cursor_location = (row, col)
+
+    def get_cursor_word(self, text, lines, document, row, col):
+        char_at_cursor = None
+        if 0 <= row < len(lines) and 0 <= col < len(lines[row]):
+            char_at_cursor = lines[row][col]
+        else:
+            return None
+
+        if not is_word_character(char_at_cursor) and not is_word_hyphen(text, document.get_index_from_location((row, col))):
+            return None
+        _, col_right = self.find(word=False, lines=lines, init_row=row, init_col=col, to_right=True, multiple_lines=False)
+        _, col_left = self.find(word=False, lines=lines, init_row=row, init_col=col, to_right=False, multiple_lines=False)
+        word = self.get_text_range((row, col_left + 1), (row, col_right))
+        return word
 
     def action_left(self):
         self.action_cursor_left()
@@ -137,6 +160,16 @@ class Text(TextArea):
 
     def action_go_to_word_left(self):
         self.go_to_word(to_right=False)
+
+    def action_meaning(self):
+        row, col = self.cursor_location
+        lines = self.text.splitlines()
+        word = self.get_cursor_word(self.text, lines, self.document, row, col)
+        if word is None:
+            debug("The cursor is not in a word to get the meaning")
+            return
+        debug(f"Will fetch meaning of word {word}")
+        self.post_message(self.GoToMeaning(word))
 
     def action_play(self):
         debug("play")

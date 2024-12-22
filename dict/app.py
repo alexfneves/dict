@@ -48,7 +48,7 @@ class DictApp(App):
         self.meaning_tab = TabPane("Meaning", id="meaning", classes="box")
         self.translate_tab = TabPane("Translate", id="translate", classes="box")
         self.settings_tab = TabPane("Settings", id="settings", classes="box")
-        self.meaning = Markdown("asdf\n\n\n\n\n\n\n\n\n\nifgfgj", classes="box")
+        self.meaning = Text("", id="meaning", classes="box", language="python", read_only=True)
         self.meaning.styles.height = "1fr"
         self.file = Text("", id="file", classes="box", language="python", read_only=True)
         self.settings = Markdown("asdf\n\n\n\n\n\n\n\n\n\nifgfgj", classes="box")
@@ -122,7 +122,7 @@ class DictApp(App):
         self.push_screen(self.list_filter, file_to_open)
     
     @on(Select.Changed)
-    def select_changed(self, event: Select.Changed) -> None:
+    def on_select_changed(self, event: Select.Changed) -> None:
         if event.select.id == "locale":
             self.languages.update(f"\[{event.value}]")
             settings = Settings()
@@ -146,3 +146,9 @@ class DictApp(App):
             if key_open in self.active_bindings.keys():
                 self._bindings.key_to_bindings.pop(key_open)
                 self.refresh_bindings()
+
+    @on(Text.GoToMeaning)
+    def on_go_to_meaning(self, event: Text.GoToMeaning) -> None:
+        debug(f"handling meaning of word {event.word}")
+        self.meaning.text = event.word
+        self.action_tab_meaning()
