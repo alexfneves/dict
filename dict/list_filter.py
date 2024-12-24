@@ -1,35 +1,33 @@
 import os
 from functools import singledispatch
 from logging import error
-from typing import Generic, List, Tuple, TypeVar
+from typing import Any, List, Tuple, TypeVar
 
 from textual import on
 from textual.app import ComposeResult
 from textual.screen import ModalScreen
 from textual.widgets import Input, Label, ListItem, ListView
 
-T = TypeVar("T")
-
 
 @singledispatch
-def get_text(item: T):
+def get_text(item: Any) -> str:
     """Default behavior if no specialization exists."""
     raise TypeError(f"Unsupported type: {type(item)}")
 
 
 @get_text.register
-def _(item: str):
+def _(item: str) -> str:
     """Specialized behavior for `str`."""
     return item
 
 
 @get_text.register
-def _(item: tuple):
+def _(item: tuple) -> str:
     """Specialized behavior for `Tuple[str, str]`."""
     return f"{item[0]}>{item[1]}"
 
 
-class ListFilter(ModalScreen, Generic[T]):
+class ListFilter(ModalScreen):
 
     DEFAULT_CSS = """
     ListFilter {
@@ -56,7 +54,7 @@ class ListFilter(ModalScreen, Generic[T]):
 
     BINDINGS = [("escape", "cancel", "Cancel")]
 
-    def __init__(self, list_data: List[T]):
+    def __init__(self, list_data: List[Any]):
         super().__init__()
         self._list_data = list_data
 

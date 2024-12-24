@@ -35,8 +35,8 @@ class Settings:
     def load(self, data_path: str):
         self._language_input: str = "en"
         self._language_output: str = "en"
-        self._data_path: str = Path.joinpath(Path.home(), ".dict")
-        self._settings_path: str = Path.joinpath(self._data_path, "settings.toml")
+        self._data_path: Path = Path.joinpath(Path.home(), ".dict")
+        self._settings_path: Path = Path.joinpath(self._data_path, "settings.toml")
         self.theme: Optional[str] = None
 
         if data_path is not None:
@@ -71,7 +71,7 @@ class Settings:
                     self.locale = self._toml_data["locale"]
                 else:
                     warning(
-                        f"Locale {toml_data['locale']} is not defined. Ignoring configuration and setting it to en."
+                        f"Locale {self._toml_data['locale']} is not defined. Ignoring configuration and setting it to en."
                     )
                     self.locale = "en"
             else:

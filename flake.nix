@@ -34,9 +34,14 @@
               modules = [
                 {
                   # https://devenv.sh/reference/options/
-                  packages = with pkgs; [
+                  packages = (with pkgs; [
                     python3
-                  ];
+                  ]) ++ (with pkgs.python311Packages; [
+                    mypy
+                    debugpy
+                    python-lsp-server
+                    pylsp-mypy
+                  ]);
 
                   languages.python = {
                     enable = true;
@@ -54,6 +59,7 @@
                       settings.profile = "black";
                     };
                     black.enable = true;
+                    mypy.enable = true;
                   };
 
                   enterShell = ''
