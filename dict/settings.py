@@ -81,4 +81,5 @@ class Settings():
         self.toml_data["locale"] = locale
         tomli_w.dump(self.toml_data, f)
         f.close()
+        self.locale = locale
         return True
