@@ -1,17 +1,34 @@
-from textual import on
 from logging import basicConfig, debug
-from textual.logging import TextualHandler
-from textual.app import App, ComposeResult, Binding
-from textual.widgets import Footer, Label, Tabs, Tab, TabbedContent, TabPane, Markdown, Static, Button, Checkbox, Select, Input, ListView, ListItem
-from textual.keys import Keys
+from sys import exit
+
+from textual import on
+from textual.app import App, Binding, ComposeResult
+from textual.containers import Container, Horizontal, Vertical
 from textual.events import Key
-from textual.containers import Horizontal, Vertical, Container
+from textual.keys import Keys
+from textual.logging import TextualHandler
+from textual.widgets import (
+    Button,
+    Checkbox,
+    Footer,
+    Input,
+    Label,
+    ListItem,
+    ListView,
+    Markdown,
+    Select,
+    Static,
+    Tab,
+    TabbedContent,
+    TabPane,
+    Tabs,
+)
+
+from dict.dictionary import default_dictionary, list_of_dictionaries
+from dict.list_filter import ListFilter
 from dict.settings import Settings
 from dict.text import Text
-from dict.dictionary import default_dictionary, list_of_dictionaries
-from dict.utils.files import list_files_recursively, file_content
-from dict.list_filter import ListFilter
-from sys import exit
+from dict.utils.files import file_content, list_files_recursively
 
 
 def mount_footer_text(dictionary=None):
@@ -58,9 +75,13 @@ class DictApp(App):
         self.meaning_tab = TabPane("Meaning", id="meaning", classes="box")
         self.translate_tab = TabPane("Translate", id="translate", classes="box")
         self.settings_tab = TabPane("Settings", id="settings", classes="box")
-        self.meaning = Text("", id="meaning", classes="box", language="python", read_only=True)
+        self.meaning = Text(
+            "", id="meaning", classes="box", language="python", read_only=True
+        )
         self.meaning.styles.height = "1fr"
-        self.file = Text("", id="file", classes="box", language="python", read_only=True)
+        self.file = Text(
+            "", id="file", classes="box", language="python", read_only=True
+        )
         self.settings = Markdown("asdf\n\n\n\n\n\n\n\n\n\nifgfgj", classes="box")
         self.settings.styles.height = "1fr"
         with self.tabs:
@@ -78,7 +99,12 @@ class DictApp(App):
                     Vertical(
                         Horizontal(
                             Label("Locale"),
-                            Select([(k, v) for k, v in Settings.LOCALES.items()], value=settings.locale, allow_blank=False, id="locale")
+                            Select(
+                                [(k, v) for k, v in Settings.LOCALES.items()],
+                                value=settings.locale,
+                                allow_blank=False,
+                                id="locale",
+                            ),
                         )
                     )
                 )
@@ -118,13 +144,15 @@ class DictApp(App):
 
     def action_search(self) -> None:
         debug("Search")
-        self.list_filter = ListFilter([
-                                          "this",
-                                          "is",
-                                          "a",
-                                          "fake",
-                                          "dictionary",
-                                      ])
+        self.list_filter = ListFilter(
+            [
+                "this",
+                "is",
+                "a",
+                "fake",
+                "dictionary",
+            ]
+        )
 
         def selected_word(word: str | None) -> None:
             if word is None:
@@ -191,7 +219,11 @@ class DictApp(App):
 
         key_search = "slash"
         if event.tab.id == "--content-tab-meaning":
-            self.bind(key_dictionary_language, "dictionary_language_meaning", description="Dictionary")
+            self.bind(
+                key_dictionary_language,
+                "dictionary_language_meaning",
+                description="Dictionary",
+            )
             self.bind(key_search, "search", description="Search")
             self.languages.update(mount_footer_text(self.dictionary_meaning))
         else:
@@ -201,7 +233,11 @@ class DictApp(App):
 
         key_open = "o"
         if event.tab.id == "--content-tab-translate":
-            self.bind(key_dictionary_language, "dictionary_language_translate", description="Dictionary")
+            self.bind(
+                key_dictionary_language,
+                "dictionary_language_translate",
+                description="Dictionary",
+            )
             self.bind(key_open, "open", description="Open file")
             self.languages.update(mount_footer_text(self.dictionary_translate))
         else:

@@ -1,5 +1,5 @@
-from . import app
-from . import list_filter
-from . import settings
-from . import text
-from . import utils
+from . import app  # noqa
+from . import list_filter  # noqa
+from . import settings  # noqa
+from . import text  # noqa
+from . import utils  # noqa

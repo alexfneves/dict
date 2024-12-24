@@ -1,25 +1,27 @@
 import os
-
-from typing import List, Generic, TypeVar, Tuple
 from functools import singledispatch
 from logging import error
+from typing import Generic, List, Tuple, TypeVar
+
 from textual import on
-from textual.screen import ModalScreen
 from textual.app import ComposeResult
-from textual.widgets import Label, Input, ListView, ListItem
+from textual.screen import ModalScreen
+from textual.widgets import Input, Label, ListItem, ListView
 
+T = TypeVar("T")
 
-T = TypeVar('T')
 
 @singledispatch
 def get_text(item: T):
     """Default behavior if no specialization exists."""
     raise TypeError(f"Unsupported type: {type(item)}")
 
+
 @get_text.register
 def _(item: str):
     """Specialized behavior for `str`."""
     return item
+
 
 @get_text.register
 def _(item: tuple):
@@ -28,7 +30,7 @@ def _(item: tuple):
 
 
 class ListFilter(ModalScreen, Generic[T]):
-    
+
     DEFAULT_CSS = """
     ListFilter {
         align: center middle;

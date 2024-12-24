@@ -1,12 +1,12 @@
 import tomllib
-import tomli_w
-
-from logging import info, error, warning
-from typing import Optional
 from functools import wraps
+from logging import error, info, warning
 from pathlib import Path
-from textual.theme import BUILTIN_THEMES
 from sys import exit
+from typing import Optional
+
+import tomli_w
+from textual.theme import BUILTIN_THEMES
 
 
 def singleton(orig_cls):
@@ -19,12 +19,13 @@ def singleton(orig_cls):
         if instance is None:
             instance = orig_new(cls, *args, **kwargs)
         return instance
+
     orig_cls.__new__ = __new__
     return orig_cls
 
 
 @singleton
-class Settings():
+class Settings:
     LOCALES = {
         "English": "en",
         "Português (Brasil)": "pt_br",
@@ -45,25 +46,33 @@ class Settings():
         try:
             self.data_path.mkdir(parents=True, exist_ok=True)
         except Exception as e:
-            error(f"Failed to create folder {data_path}: {e}. Since the folder is necessary, the program will exit")
+            error(
+                f"Failed to create folder {data_path}: {e}. Since the folder is necessary, the program will exit"
+            )
             exit()
 
         try:
-            f = open(self.settings_path, 'rb')
+            f = open(self.settings_path, "rb")
         except FileNotFoundError:
-            info(f'Failed to load file {self.settings_path}. Using default configuration values.')
+            info(
+                f"Failed to load file {self.settings_path}. Using default configuration values."
+            )
         else:
             self.toml_data: dict = tomllib.load(f)
-            if 'theme' in self.toml_data.keys():
-                if self.toml_data['theme'] in BUILTIN_THEMES.keys():
-                    self.theme = self.toml_data['theme']
+            if "theme" in self.toml_data.keys():
+                if self.toml_data["theme"] in BUILTIN_THEMES.keys():
+                    self.theme = self.toml_data["theme"]
                 else:
-                    warning(f"Theme {self.toml_data['theme']} doesn't exist. Ignoring configuration.")
-            if 'locale' in self.toml_data.keys():
-                if self.toml_data['locale'] in Settings.LOCALES.values():
-                    self.locale = self.toml_data['locale']
+                    warning(
+                        f"Theme {self.toml_data['theme']} doesn't exist. Ignoring configuration."
+                    )
+            if "locale" in self.toml_data.keys():
+                if self.toml_data["locale"] in Settings.LOCALES.values():
+                    self.locale = self.toml_data["locale"]
                 else:
-                    warning(f"Locale {toml_data['locale']} is not defined. Ignoring configuration and setting it to en.")
+                    warning(
+                        f"Locale {toml_data['locale']} is not defined. Ignoring configuration and setting it to en."
+                    )
                     self.locale = "en"
             else:
                 self.locale = "en"
@@ -74,9 +83,11 @@ class Settings():
             info("Can't save locale {locale} because it's not available.")
             return False
         try:
-            f = open(self.settings_path, 'wb')
+            f = open(self.settings_path, "wb")
         except FileNotFoundError:
-            info(f'Failed to open file {self.settings_path}. Giving up on saving settings.')
+            info(
+                f"Failed to open file {self.settings_path}. Giving up on saving settings."
+            )
             return False
         self.toml_data["locale"] = locale
         tomli_w.dump(self.toml_data, f)

@@ -1,6 +1,7 @@
 def default_dictionary():
     return ("en", "en")
 
+
 def list_of_dictionaries():
     return [
         ("da", "da"),

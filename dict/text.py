@@ -1,27 +1,29 @@
 import string
-
-from typing import Tuple, List
 from logging import debug
+from typing import List, Tuple
+
 from textual.app import Binding
-from textual.widgets import TextArea
 from textual.message import Message
+from textual.widgets import TextArea
 
 
 def is_symbol(char):
     """Check if the character is a standalone symbol."""
-    symbols = list(string.punctuation.replace('-', '')) + [' ', '\t', '\n']
+    symbols = list(string.punctuation.replace("-", "")) + [" ", "\t", "\n"]
     return char in symbols
+
 
 def is_word_character(char):
     """Check if the character is a word character (alphanumeric or underscore)."""
-    return char.isalnum() or char == '_'
+    return char.isalnum() or char == "_"
+
 
 def is_word_hyphen(text, index):
     """
     Evaluate if a hyphen at the given index is part of a compound word
     or a standalone symbol.
     """
-    if text[index] != '-':
+    if text[index] != "-":
         return False  # The character at the index is not a hyphen.
 
     # Check characters on both sides of the hyphen
@@ -57,10 +59,18 @@ class Text(TextArea):
 
     def __init__(self, *args, **kwargs):
         # Ensure show_line_numbers is set to True
-        kwargs['show_line_numbers'] = True
+        kwargs["show_line_numbers"] = True
         super().__init__(*args, **kwargs)
 
-    def find(self, word: bool, lines: List[str], init_row: int, init_col: int, to_right:bool, multiple_lines: bool=True) -> Tuple[int, int] | None:
+    def find(
+        self,
+        word: bool,
+        lines: List[str],
+        init_row: int,
+        init_col: int,
+        to_right: bool,
+        multiple_lines: bool = True,
+    ) -> Tuple[int, int] | None:
         if to_right:
             direction = 1
             ran = range(init_row, len(lines))
@@ -78,14 +88,16 @@ class Text(TextArea):
             debug(c)
             while 0 <= c < len(lines[r]):
                 char_at_cursor = lines[r][c]
-                is_word = is_word_character(char_at_cursor) or is_word_hyphen(self.text, self.document.get_index_from_location((r, c)))
+                is_word = is_word_character(char_at_cursor) or is_word_hyphen(
+                    self.text, self.document.get_index_from_location((r, c))
+                )
                 debug(f"Character ({r}, {c}): {char_at_cursor}")
                 if (word and is_word) or (not word and not is_word):
                     return (r, c)
                 c = c + direction
             debug("Cursor is out of bounds.")
             if not multiple_lines:
-                return (r,c)
+                return (r, c)
         return None
 
     def go_to_word(self, to_right):
@@ -98,15 +110,29 @@ class Text(TextArea):
         else:
             debug("Cursor is out of bounds.")
 
-        if char_at_cursor is not None and (is_word_character(char_at_cursor) or is_word_hyphen(self.text, self.document.get_index_from_location((row, col)))):
+        if char_at_cursor is not None and (
+            is_word_character(char_at_cursor)
+            or is_word_hyphen(
+                self.text, self.document.get_index_from_location((row, col))
+            )
+        ):
             debug(f"is word at ({row}, {col})")
-            found = self.find(word=False, lines=lines, init_row=row, init_col=col, to_right=to_right, multiple_lines=False)
+            found = self.find(
+                word=False,
+                lines=lines,
+                init_row=row,
+                init_col=col,
+                to_right=to_right,
+                multiple_lines=False,
+            )
             if found is None:
                 debug("Failed to find next non word")
                 return
             row, col = found
             debug(f"is not word at ({row}, {col})")
-        found = self.find(word=True, lines=lines, init_row=row, init_col=col, to_right=to_right)
+        found = self.find(
+            word=True, lines=lines, init_row=row, init_col=col, to_right=to_right
+        )
         if found is None:
             debug("Failed to find next word")
             return
@@ -121,10 +147,26 @@ class Text(TextArea):
         else:
             return None
 
-        if not is_word_character(char_at_cursor) and not is_word_hyphen(text, document.get_index_from_location((row, col))):
+        if not is_word_character(char_at_cursor) and not is_word_hyphen(
+            text, document.get_index_from_location((row, col))
+        ):
             return None
-        _, col_right = self.find(word=False, lines=lines, init_row=row, init_col=col, to_right=True, multiple_lines=False)
-        _, col_left = self.find(word=False, lines=lines, init_row=row, init_col=col, to_right=False, multiple_lines=False)
+        _, col_right = self.find(
+            word=False,
+            lines=lines,
+            init_row=row,
+            init_col=col,
+            to_right=True,
+            multiple_lines=False,
+        )
+        _, col_left = self.find(
+            word=False,
+            lines=lines,
+            init_row=row,
+            init_col=col,
+            to_right=False,
+            multiple_lines=False,
+        )
         word = self.get_text_range((row, col_left + 1), (row, col_right))
         return word
 
@@ -173,4 +215,3 @@ class Text(TextArea):
 
     def action_play(self):
         debug("play")
-

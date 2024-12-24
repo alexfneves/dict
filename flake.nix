@@ -48,6 +48,14 @@
                     poetry.enable = true;
                   };
 
+                  pre-commit.hooks = {
+                    isort = {
+                      enable = true;
+                      settings.profile = "black";
+                    };
+                    black.enable = true;
+                  };
+
                   enterShell = ''
                     echo "Entering dev shell of project dict"
                   '';
