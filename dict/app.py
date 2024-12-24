@@ -8,9 +8,19 @@ from textual.events import Key
 from textual.containers import Horizontal, Vertical, Container
 from dict.settings import Settings
 from dict.text import Text
+from dict.dictionary import default_dictionary, list_of_dictionaries
 from dict.utils.files import list_files_recursively, file_content
 from dict.list_filter import ListFilter
 from sys import exit
+
+
+def mount_footer_text(dictionary=None):
+    settings = Settings()
+    ret = "\["
+    if dictionary is not None:
+        ret += f"{dictionary[0]}>{dictionary[1]}|"
+    ret += f"{settings.locale}]"
+    return ret
 
 
 class DictApp(App):
@@ -74,7 +84,9 @@ class DictApp(App):
                 )
         self.footer = Footer()
         self.footer.show_command_palette = False
-        self.languages = Label(f"\[{settings.locale}]", id="right-label", classes="box")
+        self.dictionary_meaning = default_dictionary()
+        self.dictionary_translate = default_dictionary()
+        self.languages = Label("", id="right-label", classes="box")
         with Horizontal(id="footer-outer", classes="box"):
             with Horizontal(id="footer-inner", classes="box"):
                 yield self.footer
@@ -107,7 +119,7 @@ class DictApp(App):
     def action_search(self) -> None:
         debug("Search")
         self.list_filter = ListFilter([
-                                          "This",
+                                          "this",
                                           "is",
                                           "a",
                                           "fake",
@@ -135,19 +147,53 @@ class DictApp(App):
 
         self.push_screen(self.list_filter, file_to_open)
 
+    def dictionary_language(self, tab_name):
+        self.list_filter = ListFilter(list_of_dictionaries())
+
+        def select_dictionary(data: str | None) -> None:
+            if data is None:
+                return
+            if self.tabs.active == "meaning":
+                self.dictionary_meaning = data
+            if self.tabs.active == "translate":
+                self.dictionary_translate = data
+            self.languages.update(mount_footer_text(data))
+
+        self.push_screen(self.list_filter, select_dictionary)
+
+    def action_dictionary_language_meaning(self):
+        debug("action_dictionary_language_meaning")
+        self.dictionary_language("meaning")
+
+    def action_dictionary_language_translate(self):
+        debug("action_dictionary_language_transalte")
+        self.dictionary_language("translate")
+
     @on(Select.Changed)
     def on_select_changed(self, event: Select.Changed) -> None:
         if event.select.id == "locale":
-            self.languages.update(f"\[{event.value}]")
             settings = Settings()
             settings.set_locale(event.value)
+            if self.tabs.active == "meaning":
+                text = mount_footer_text(self.dictionary_meaning)
+            elif self.tabs.active == "translate":
+                text = mount_footer_text(self.dictionary_translate)
+            else:
+                text = mount_footer_text()
+            self.languages.update(text)
 
     def on_tabbed_content_tab_activated(
         self, event: TabbedContent.TabActivated
     ) -> None:
+        key_dictionary_language = "d"
+        if key_dictionary_language in self.active_bindings.keys():
+            self._bindings.key_to_bindings.pop(key_dictionary_language)
+
         key_search = "slash"
         if event.tab.id == "--content-tab-meaning":
+            self.bind(key_dictionary_language, "dictionary_language_meaning", description="Dictionary")
             self.bind(key_search, "search", description="Search")
+            self.languages.update(mount_footer_text(self.dictionary_meaning))
         else:
             if key_search in self.active_bindings.keys():
                 self._bindings.key_to_bindings.pop(key_search)
@@ -155,11 +201,16 @@ class DictApp(App):
 
         key_open = "o"
         if event.tab.id == "--content-tab-translate":
+            self.bind(key_dictionary_language, "dictionary_language_translate", description="Dictionary")
             self.bind(key_open, "open", description="Open file")
+            self.languages.update(mount_footer_text(self.dictionary_translate))
         else:
             if key_open in self.active_bindings.keys():
                 self._bindings.key_to_bindings.pop(key_open)
                 self.refresh_bindings()
+
+        if event.tab.id == "--content-tab-settings":
+            self.languages.update(mount_footer_text())
 
     @on(Text.GoToMeaning)
     def on_go_to_meaning(self, event: Text.GoToMeaning) -> None:

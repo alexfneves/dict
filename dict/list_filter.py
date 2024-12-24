@@ -1,13 +1,33 @@
 import os
 
-from typing import List
-from logging import info, error
+from typing import List, Generic, TypeVar, Tuple
+from functools import singledispatch
+from logging import error
 from textual import on
 from textual.screen import ModalScreen
 from textual.app import ComposeResult
 from textual.widgets import Label, Input, ListView, ListItem
 
-class ListFilter(ModalScreen):
+
+T = TypeVar('T')
+
+@singledispatch
+def get_text(item: T):
+    """Default behavior if no specialization exists."""
+    raise TypeError(f"Unsupported type: {type(item)}")
+
+@get_text.register
+def _(item: str):
+    """Specialized behavior for `str`."""
+    return item
+
+@get_text.register
+def _(item: tuple):
+    """Specialized behavior for `Tuple[str, str]`."""
+    return f"{item[0]}>{item[1]}"
+
+
+class ListFilter(ModalScreen, Generic[T]):
     
     DEFAULT_CSS = """
     ListFilter {
@@ -32,9 +52,9 @@ class ListFilter(ModalScreen):
     }
     """
 
-    BINDINGS = [("escape", "handle_escape", "Handle Escape")]
+    BINDINGS = [("escape", "cancel", "Cancel")]
 
-    def __init__(self, list_data: List[str]):
+    def __init__(self, list_data: List[T]):
         super().__init__()
         self.list_data = list_data
 
@@ -44,9 +64,9 @@ class ListFilter(ModalScreen):
         self.list_view = ListView()
         with self.list_view:
             for f in self.list_data:
-                yield ListItem(Label(f))
+                yield ListItem(Label(get_text(f)))
 
-    def action_handle_escape(self) -> None:
+    def action_cancel(self) -> None:
         self.dismiss()
 
     @on(ListView.Selected)
@@ -55,7 +75,10 @@ class ListFilter(ModalScreen):
             return
         if len(self.list_view.highlighted_child.children) == 0:
             self.dismiss()
-        self.dismiss(event.item.children[0].renderable)
+        r = event.item.children[0].renderable
+        for d in self.list_data:
+            if r == get_text(d):
+                self.dismiss(d)
 
     @on(Input.Submitted)
     def file_name_selected(self, event: Input.Submitted) -> None:
@@ -63,11 +86,15 @@ class ListFilter(ModalScreen):
             return
         if len(self.list_view.highlighted_child.children) == 0:
             self.dismiss()
-        self.dismiss(self.list_view.highlighted_child.children[0].renderable)
+        r = self.list_view.highlighted_child.children[0].renderable
+        for d in self.list_data:
+            if r == get_text(d):
+                self.dismiss(d)
 
     @on(Input.Changed)
     async def file_name_changed(self, event: Input.Changed) -> None:
         self.list_view.clear()
         for d in self.list_data:
-            if self.input.value in d:
-                self.list_view.append(ListItem(Label(d)))
+            t = get_text(d)
+            if self.input.value in t:
+                self.list_view.append(ListItem(Label(t)))

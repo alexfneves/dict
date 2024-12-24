@@ -1,6 +1,6 @@
 import os
 
-from logging import info, error
+from logging import error
 from typing import List
 
 
