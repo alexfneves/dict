@@ -1,6 +1,6 @@
 from logging import basicConfig, debug
 from sys import exit
-from typing import Any
+from typing import Any, Tuple
 
 from textual import on
 from textual.app import App, Binding, ComposeResult
@@ -178,12 +178,30 @@ class DictApp(App):
             self._file.text = file_text
             self.update_bindings_translate_config()
 
+            settings = Settings()
+            sf = settings.get_file(data)
+            if sf is None:
+                return
+            self._languages.update(
+                mount_footer_text((sf.language_input, sf.language_output))
+            )
+
         self.push_screen(list_filter, file_to_open)
 
     def dictionary_language(self, tab_name):
         list_filter = ListFilter(list_of_dictionaries())
 
-        def select_dictionary(data: str | None) -> None:
+        def select_dictionary(data: Tuple[str, str] | None) -> None:
+            if self._filename is None or data is None:
+                return
+
+            settings = Settings()
+            sf = settings.get_file(self._filename)
+            if sf is None:
+                return
+            sf.language_input = data[0]
+            sf.language_output = data[1]
+            settings.set_file(sf)
             if data is None:
                 return
             if self._tabs.active == "meaning":

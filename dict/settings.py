@@ -46,6 +46,8 @@ def open_file(func: Callable) -> Callable:
 
 class SettingsFile(BaseModel):
     filename: str
+    language_input: str = "en"
+    language_output: str = "en"
     translate_when_file_is_opened: bool = True
     line_break_ends_phrase: bool = False
 
