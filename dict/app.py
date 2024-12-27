@@ -1,5 +1,6 @@
 from logging import basicConfig, debug
 from sys import exit
+from typing import Any
 
 from textual import on
 from textual.app import App, Binding, ComposeResult
@@ -28,6 +29,7 @@ from dict.dictionary import default_dictionary, list_of_dictionaries
 from dict.list_filter import ListFilter
 from dict.settings import Settings
 from dict.text import Text
+from dict.translate_config import TranslateConfig
 from dict.utils.files import file_content, list_files_recursively
 
 
@@ -71,6 +73,7 @@ class DictApp(App):
 
     def compose(self) -> ComposeResult:
         settings = Settings()
+        self._filename: str | None = None
         self._tabs = TabbedContent(classes="box")
         self._meaning_tab = TabPane("Meaning", id="meaning", classes="box")
         self._translate_tab = TabPane("Translate", id="translate", classes="box")
@@ -171,7 +174,9 @@ class DictApp(App):
             file_text = file_content(data)
             if file_text is None:
                 return
+            self._filename = data
             self._file.text = file_text
+            self.update_bindings_translate_config()
 
         self.push_screen(list_filter, file_to_open)
 
@@ -197,6 +202,15 @@ class DictApp(App):
         debug("action_dictionary_language_transalte")
         self.dictionary_language("translate")
 
+    def action_translate_config(self):
+        translate_config = TranslateConfig(filename=self._filename)
+
+        def after_config(data: Any) -> None:
+            # TODO(afn): update translation field based on the new configuration
+            pass
+
+        self.push_screen(translate_config, after_config)
+
     @on(Select.Changed)
     def on_select_changed(self, event: Select.Changed) -> None:
         if event.select.id == "locale":
@@ -209,6 +223,17 @@ class DictApp(App):
             else:
                 text = mount_footer_text()
             self._languages.update(text)
+
+    def update_bindings_translate_config(self):
+        key_translate_config = "c"
+        if self._tabs.active == "translate" and self._filename is not None:
+            self.bind(
+                key_translate_config, "translate_config", description="Translate config"
+            )
+        else:
+            if key_translate_config in self.active_bindings.keys():
+                self._bindings.key_to_bindings.pop(key_translate_config)
+        self.refresh_bindings()
 
     def on_tabbed_content_tab_activated(
         self, event: TabbedContent.TabActivated
@@ -229,7 +254,6 @@ class DictApp(App):
         else:
             if key_search in self.active_bindings.keys():
                 self._bindings.key_to_bindings.pop(key_search)
-                self.refresh_bindings()
 
         key_open = "o"
         if event.tab.id == "--content-tab-translate":
@@ -243,10 +267,12 @@ class DictApp(App):
         else:
             if key_open in self.active_bindings.keys():
                 self._bindings.key_to_bindings.pop(key_open)
-                self.refresh_bindings()
 
         if event.tab.id == "--content-tab-settings":
             self._languages.update(mount_footer_text())
+
+        self.update_bindings_translate_config()
+        self.refresh_bindings()
 
     @on(Text.GoToMeaning)
     def on_go_to_meaning(self, event: Text.GoToMeaning) -> None:
