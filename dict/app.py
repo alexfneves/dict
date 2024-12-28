@@ -1,6 +1,6 @@
 from logging import basicConfig, debug
 from sys import exit
-from typing import Any, Tuple
+from typing import Any, List, Tuple
 
 from textual import on
 from textual.app import App, Binding, ComposeResult
@@ -8,6 +8,7 @@ from textual.containers import Container, Horizontal, Vertical
 from textual.events import Key
 from textual.keys import Keys
 from textual.logging import TextualHandler
+from textual.theme import BUILTIN_THEMES
 from textual.widgets import (
     Button,
     Checkbox,
@@ -69,6 +70,15 @@ class DictApp(App):
             # width: 25%;
             text-align: right;
         }
+        #settings_container {
+            layout: grid;
+            grid-size: 2;
+            grid-columns: auto 1fr;
+            grid-rows: auto;
+        }
+        .settings_label {
+            align: center middle
+        }
     """
 
     def compose(self) -> ComposeResult:
@@ -85,8 +95,6 @@ class DictApp(App):
         self._file = Text(
             "", id="file", classes="box", language="python", read_only=True
         )
-        self._settings = Markdown("asdf\n\n\n\n\n\n\n\n\n\nifgfgj", classes="box")
-        self._settings.styles.height = "1fr"
         with self._tabs:
             with self._meaning_tab:
                 yield self._meaning
@@ -98,18 +106,25 @@ class DictApp(App):
                     ),
                 )
             with self._settings_tab:
+                locales: List[Tuple[str, str]] = []
+                for l in SettingsGeneralLocales:
+                    locales.append((l.to_str(), l.value))
                 yield Container(
-                    Vertical(
-                        Horizontal(
-                            Label("Locale"),
-                            Select(
-                                [(k, v) for k, v in Settings.LOCALES.items()],
-                                value=settings.get_general().locale.value,
-                                allow_blank=False,
-                                id="locale",
-                            ),
-                        )
-                    )
+                    Container(Label("Locale"), classes="settings_label"),
+                    Select(
+                        locales,
+                        value=settings.get_general().locale.value,
+                        allow_blank=False,
+                        id="locale",
+                    ),
+                    Container(Label("Theme"), classes="settings_label"),
+                    Select(
+                        [(v, v) for v in BUILTIN_THEMES.keys()],
+                        value=settings.get_general().theme,
+                        allow_blank=False,
+                        id="theme",
+                    ),
+                    id="settings_container",
                 )
         self._footer = Footer()
         self._footer.show_command_palette = False
@@ -243,6 +258,12 @@ class DictApp(App):
             else:
                 text = mount_footer_text()
             self._languages.update(text)
+        if event.select.id == "theme":
+            settings = Settings()
+            sg = settings.get_general()
+            sg.theme = event.value
+            settings.set_general(sg)
+            self.theme = event.value
 
     def update_bindings_translate_config(self):
         key_translate_config = "c"

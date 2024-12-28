@@ -8,7 +8,6 @@ from typing import IO, Any, Callable, List, Optional, Tuple
 
 import tomli_w
 from pydantic import BaseModel
-from textual.theme import BUILTIN_THEMES
 
 
 def singleton(orig_cls):
@@ -97,12 +96,19 @@ class SettingsGeneralLocales(str, Enum):
     pt_br = "pt_br"
 
     @staticmethod
-    def locale(code) -> "SettingsGeneralLocales":
+    def locale(code: str) -> "SettingsGeneralLocales":
         if code == SettingsGeneralLocales.da.value:
             return SettingsGeneralLocales.da
         if code == SettingsGeneralLocales.pt_br.value:
             return SettingsGeneralLocales.pt_br
         return SettingsGeneralLocales.en
+
+    def to_str(self) -> str:
+        if self == SettingsGeneralLocales.da:
+            return "Danish"
+        if self == SettingsGeneralLocales.pt_br:
+            return "Português (Brasil)"
+        return "English"
 
 
 class SettingsGeneral(BaseModel):
@@ -114,12 +120,6 @@ class SettingsGeneral(BaseModel):
 
 @singleton
 class Settings:
-    LOCALES = {
-        "English": "en",
-        "Português (Brasil)": "pt_br",
-        "Dansk": "da",
-    }
-
     def load(self, data_path: str):
         self._data_path: Path = Path.joinpath(Path.home(), ".dict")
         self._settings_path: Path = Path.joinpath(self._data_path, "settings.toml")
