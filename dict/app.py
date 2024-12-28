@@ -27,7 +27,7 @@ from textual.widgets import (
 
 from dict.dictionary import default_dictionary, list_of_dictionaries
 from dict.list_filter import ListFilter
-from dict.settings import Settings
+from dict.settings import Settings, SettingsGeneralLocales
 from dict.text import Text
 from dict.translate_config import TranslateConfig
 from dict.utils.files import file_content, list_files_recursively
@@ -38,7 +38,7 @@ def mount_footer_text(dictionary=None):
     ret = "\["
     if dictionary is not None:
         ret += f"{dictionary[0]}>{dictionary[1]}|"
-    ret += f"{settings.locale}]"
+    ret += f"{settings.get_general().locale.value}]"
     return ret
 
 
@@ -104,7 +104,7 @@ class DictApp(App):
                             Label("Locale"),
                             Select(
                                 [(k, v) for k, v in Settings.LOCALES.items()],
-                                value=settings.locale,
+                                value=settings.get_general().locale.value,
                                 allow_blank=False,
                                 id="locale",
                             ),
@@ -123,8 +123,8 @@ class DictApp(App):
 
     def on_mount(self) -> None:
         settings = Settings()
-        if settings.theme is not None:
-            self.theme = settings.theme
+        if settings.get_general().theme is not None:
+            self.theme = settings.get_general().theme
 
     def action_tab_meaning(self):
         self.set_focus(None)
@@ -233,7 +233,9 @@ class DictApp(App):
     def on_select_changed(self, event: Select.Changed) -> None:
         if event.select.id == "locale":
             settings = Settings()
-            settings.set_locale(event.value)
+            sg = settings.get_general()
+            sg.locale = SettingsGeneralLocales.locale(event.value)
+            settings.set_general(sg)
             if self._tabs.active == "meaning":
                 text = mount_footer_text(self._dictionary_meaning)
             elif self._tabs.active == "translate":

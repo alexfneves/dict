@@ -1,9 +1,10 @@
 import tomllib
+from enum import Enum
 from functools import wraps
 from logging import debug, error, info, warning
 from pathlib import Path
 from sys import exit
-from typing import IO, Any, Callable, List, Optional
+from typing import IO, Any, Callable, List, Optional, Tuple
 
 import tomli_w
 from pydantic import BaseModel
@@ -25,23 +26,49 @@ def singleton(orig_cls):
     return orig_cls
 
 
-def open_file(func: Callable) -> Callable:
-    @wraps(func)
-    def wrapper(self, *args, **kwargs) -> bool:
-        try:
-            f = open(self._settings_path, "wb")
-        except FileNotFoundError:
-            info(
-                f"Failed to open file {self._settings_path}. Giving up on saving settings."
-            )
-            return False
-        ret = func(self, *args, **kwargs)
-        if ret:
-            tomli_w.dump(self._toml_data, f)
-        f.close()
-        return ret
+def open_file(write: bool):
+    """Generic decorator to handle file opening and closing."""
 
-    return wrapper
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(self, *args, **kwargs) -> bool:
+            toml: dict | None = None
+            open_failed = False
+            f2 = None
+            try:
+                f = open(self._settings_path, "rb")
+                toml = tomllib.load(f)
+                f.close()
+                if write:
+                    f2 = open(self._settings_path, "wb")
+            except FileNotFoundError:
+                info(
+                    f"Failed to open file {self._settings_path}. Giving up on saving settings."
+                )
+                open_failed = True
+            if write:
+                ret, toml = func(self, toml, *args, **kwargs)
+                if ret is not None:
+                    tomli_w.dump(toml, f2)
+            else:
+                ret = func(self, toml, *args, **kwargs)
+            if not open_failed and f2 is not None:
+                f2.close()
+            return ret
+
+        return wrapper
+
+    return decorator
+
+
+def open_file_read(func: Callable) -> Callable:
+    """Decorator for reading files."""
+    return open_file(write=False)(func)
+
+
+def open_file_write(func: Callable) -> Callable:
+    """Decorator for writing files."""
+    return open_file(write=True)(func)
 
 
 class SettingsFile(BaseModel):
@@ -50,6 +77,39 @@ class SettingsFile(BaseModel):
     language_output: str = "en"
     translate_when_file_is_opened: bool = True
     line_break_ends_phrase: bool = False
+
+
+class SettingsGeneralLanguages(str, Enum):
+    da_da = "da__da"
+    da_en = "da__en"
+    da_pt_br = "da__pt_br"
+    en_da = "en__da"
+    en_en = "en__en"
+    en_pt_br = "en__pt_br"
+    pt_br_da = "pt_br__da"
+    pt_br_en = "pt_br__en"
+    pt_br_pt_br = "pt_br__pt_br"
+
+
+class SettingsGeneralLocales(str, Enum):
+    da = "da"
+    en = "en"
+    pt_br = "pt_br"
+
+    @staticmethod
+    def locale(code) -> "SettingsGeneralLocales":
+        if code == SettingsGeneralLocales.da.value:
+            return SettingsGeneralLocales.da
+        if code == SettingsGeneralLocales.pt_br.value:
+            return SettingsGeneralLocales.pt_br
+        return SettingsGeneralLocales.en
+
+
+class SettingsGeneral(BaseModel):
+    language_input: SettingsGeneralLanguages = SettingsGeneralLanguages.en_en
+    language_output: SettingsGeneralLanguages = SettingsGeneralLanguages.en_en
+    locale: SettingsGeneralLocales = SettingsGeneralLocales.en
+    theme: str = "textual-dark"
 
 
 @singleton
@@ -61,12 +121,8 @@ class Settings:
     }
 
     def load(self, data_path: str):
-        self._language_input: str = "en"
-        self._language_output: str = "en"
         self._data_path: Path = Path.joinpath(Path.home(), ".dict")
         self._settings_path: Path = Path.joinpath(self._data_path, "settings.toml")
-        self._files: List[SettingsFile] = []
-        self.theme: Optional[str] = None
 
         if data_path is not None:
             self._data_path = Path(data_path)
@@ -80,67 +136,39 @@ class Settings:
             )
             exit()
 
-        try:
-            f = open(self._settings_path, "rb")
-        except FileNotFoundError:
-            info(
-                f"Failed to load file {self._settings_path}. Using default configuration values."
-            )
-        else:
-            self._toml_data: dict = tomllib.load(f)
-            if "theme" in self._toml_data.keys():
-                if self._toml_data["theme"] in BUILTIN_THEMES.keys():
-                    self.theme = self._toml_data["theme"]
-                else:
-                    warning(
-                        f"Theme {self._toml_data['theme']} doesn't exist. Ignoring configuration."
-                    )
-            if "locale" in self._toml_data.keys():
-                if self._toml_data["locale"] in Settings.LOCALES.values():
-                    self.locale = self._toml_data["locale"]
-                else:
-                    warning(
-                        f"Locale {self._toml_data['locale']} is not defined. Ignoring configuration and setting it to en."
-                    )
-                    self.locale = "en"
-            else:
-                self.locale = "en"
+    @open_file_read
+    def get_general(self, toml: dict) -> SettingsGeneral:
+        if toml is None:
+            return SettingsGeneral()
+        if "general" in toml.keys():
+            return SettingsGeneral(**toml["general"])
+        return SettingsGeneral()
 
-            if "files" in self._toml_data.keys():
-                for file_key, file_value in self._toml_data["files"].items():
-                    self._files.append(SettingsFile(**file_value))
-            f.close()
+    @open_file_write
+    def set_general(self, toml: dict, settings: SettingsGeneral) -> Tuple[bool, dict]:
+        if toml is None:
+            return (False, toml)
+        toml["general"] = settings.dict()
+        return (True, toml)
 
-    def set_locale(self, locale: str) -> bool:
-        if locale not in Settings.LOCALES.values():
-            info("Can't save locale {locale} because it's not available.")
-            return False
-        try:
-            f = open(self._settings_path, "wb")
-        except FileNotFoundError:
-            info(
-                f"Failed to open file {self._settings_path}. Giving up on saving settings."
-            )
-            return False
-        self._toml_data["locale"] = locale
-        tomli_w.dump(self._toml_data, f)
-        f.close()
-        self.locale = locale
-        return True
-
-    def get_file(self, filename: str) -> SettingsFile | None:
-        if "files" not in self._toml_data.keys():
-            return None
+    @open_file_read
+    def get_file(self, toml, filename: str) -> SettingsFile:
+        if toml is None:
+            return SettingsFile(filename=filename)
+        if "files" not in toml.keys():
+            return SettingsFile(filename=filename)
         name: Path = Path.joinpath(Path().resolve(), filename)
-        if name.as_posix() in self._toml_data["files"].keys():
-            sf = self._toml_data["files"][name.as_posix()]
+        if name.as_posix() in toml["files"].keys():
+            sf = toml["files"][name.as_posix()]
             return SettingsFile(**sf)
-        return None
+        return SettingsFile(filename=filename)
 
-    @open_file
-    def set_file(self, settings: SettingsFile) -> bool:
+    @open_file_write
+    def set_file(self, toml: dict, settings: SettingsFile) -> Tuple[bool, dict]:
+        if toml is None:
+            return (False, toml)
         name: Path = Path.joinpath(Path().resolve(), settings.filename)
-        if "files" not in self._toml_data:
-            self._toml_data["files"] = {}
-        self._toml_data["files"][name.as_posix()] = settings.dict()
-        return True
+        if "files" not in toml.keys():
+            toml["files"] = {}
+        toml["files"][name.as_posix()] = settings.dict()
+        return (True, toml)
