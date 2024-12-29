@@ -5,6 +5,7 @@ import click
 from textual.logging import TextualHandler
 
 from dict.app import DictApp
+from dict.dictionary import create_db, create_words
 from dict.settings import Settings
 
 
@@ -15,6 +16,8 @@ def config(verbose: bool, very_very_verbose: bool, data_path: str):
         basicConfig(level=DEBUG, handlers=[TextualHandler()])
     s = Settings()
     s.load(data_path)
+    create_db()
+    create_words()
 
 
 def option_data_path(func):

@@ -36,11 +36,13 @@
                   # https://devenv.sh/reference/options/
                   packages = (with pkgs; [
                     python3
+                    sqlitebrowser
                   ]) ++ (with pkgs.python311Packages; [
                     mypy
                     debugpy
                     python-lsp-server
                     pylsp-mypy
+                    sqlmodel # pre commit mypy and linter mypy would fail without it
                   ]);
 
                   languages.python = {
