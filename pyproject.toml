@@ -16,6 +16,7 @@ tomli-w = "^1.1.0"
 pydantic = "^2.10.4"
 textual-slider = "^0.1.2"
 pygame = "^2.6.1"
+sqlmodel = "^0.0.22"
 
 [tool.poetry.scripts]
 dict = "dict.main:cli"
