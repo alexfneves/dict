@@ -1,4 +1,5 @@
 from logging import basicConfig, debug
+from signal import SIGINT, signal
 from sys import exit
 from typing import Any, List, Tuple
 
@@ -141,9 +142,17 @@ class DictApp(App):
         if settings.get_general().theme is not None:
             self.theme = settings.get_general().theme
 
+        def on_quit(signum, stack) -> None:
+            self.action_quit()
+
+        signal(SIGINT, on_quit)
+
+    def action_help_quit(self):
+        self.action_quit()
+
     def action_tab_meaning(self):
         self.set_focus(None)
-        self._tabs.focus()
+        self._meaning.focus()
         self._tabs.active = "meaning"
 
     def action_tab_translate(self):

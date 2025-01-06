@@ -73,6 +73,9 @@
                     dict-dev.exec = ''
                       textual run --dev "dict/main.py $@";
                     '';
+                    dict-reload.exec = ''
+                      bash scripts/dict-reload;
+                    '';
                   };
                 }
               ];
