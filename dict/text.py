@@ -6,6 +6,8 @@ from textual.app import Binding
 from textual.message import Message
 from textual.widgets import TextArea
 
+from dict.player import Player
+
 
 def is_symbol(char):
     """Check if the character is a standalone symbol."""
@@ -214,4 +216,5 @@ class Text(TextArea):
         self.post_message(self.GoToMeaning(word))
 
     def action_play(self):
-        debug("play")
+        player = Player(self.id, True)
+        self.app.push_screen(player)

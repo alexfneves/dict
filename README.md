@@ -21,6 +21,10 @@ To see debug messages, run the application with:
 
     dict-dev -vvv
 
+To have hot reloading to develop the application, run:
+
+    dict-reload
+
 Since the amount of logs from textual itself might be too big, some messages could be supressed by running:
 
     textual console -x EVENT -x SYSTEM

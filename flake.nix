@@ -35,6 +35,7 @@
                 {
                   # https://devenv.sh/reference/options/
                   packages = (with pkgs; [
+                    pulseaudio
                     python3
                   ]) ++ (with pkgs.python311Packages; [
                     mypy

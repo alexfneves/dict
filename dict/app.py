@@ -142,6 +142,8 @@ class DictApp(App):
         if settings.get_general().theme is not None:
             self.theme = settings.get_general().theme
 
+        self._meaning.focus()
+
         def on_quit(signum, stack) -> None:
             self.action_quit()
 
