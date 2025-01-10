@@ -1,13 +1,11 @@
-import asyncio
 import os
 from logging import debug
 
 import pygame
-from textual import on
 from textual.app import ComposeResult
-from textual.containers import Container, Horizontal, Vertical
+from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
-from textual.widgets import Checkbox, Label, Placeholder
+from textual.widgets import Checkbox, Label
 from textual_slider import Slider
 
 from dict.utils.timer import Timer

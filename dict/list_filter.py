@@ -1,8 +1,6 @@
-import os
-from asyncio import Task, create_task, get_running_loop, sleep
+from asyncio import Task, create_task, get_running_loop
 from functools import singledispatch
-from logging import error
-from typing import Any, List, Optional, Tuple, TypeVar
+from typing import Any, List, Optional
 
 from textual import on
 from textual.app import ComposeResult

@@ -63,6 +63,14 @@
                     };
                     black.enable = true;
                     mypy.enable = true;
+                    autoflake = {
+                      enable = true;
+                      args = [
+                        "--in-place"
+                        "--remove-unused-variables"
+                        "--remove-all-unused-imports"
+                      ];
+                    };
                   };
 
                   enterShell = ''

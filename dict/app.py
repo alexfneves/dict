@@ -1,31 +1,12 @@
-from logging import basicConfig, debug
+from logging import debug
 from signal import SIGINT, signal
-from sys import exit
 from typing import Any, List, Tuple
 
 from textual import on
 from textual.app import App, Binding, ComposeResult
-from textual.containers import Container, Horizontal, Vertical
-from textual.events import Key
-from textual.keys import Keys
-from textual.logging import TextualHandler
+from textual.containers import Container, Horizontal
 from textual.theme import BUILTIN_THEMES
-from textual.widgets import (
-    Button,
-    Checkbox,
-    Footer,
-    Input,
-    Label,
-    ListItem,
-    ListView,
-    Markdown,
-    Select,
-    Static,
-    Tab,
-    TabbedContent,
-    TabPane,
-    Tabs,
-)
+from textual.widgets import Footer, Label, Markdown, Select, TabbedContent, TabPane
 
 from dict.dictionary import default_dictionary, list_of_dictionaries
 from dict.list_filter import ListFilter

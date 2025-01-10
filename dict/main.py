@@ -1,4 +1,4 @@
-from logging import DEBUG, INFO, basicConfig, debug, info, warning
+from logging import DEBUG, INFO, basicConfig, info
 from sys import exit
 
 import click
