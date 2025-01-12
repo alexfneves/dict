@@ -1,23 +1,30 @@
-from logging import DEBUG, INFO, basicConfig, info
+from logging import DEBUG, INFO, basicConfig, getLogger, info
 from sys import exit
 
 import click
 from textual.logging import TextualHandler
 
 from dict.app import DictApp
-from dict.dictionary import create_db, create_words
+from dict.db.engine import create_db, fillout_db
 from dict.settings import Settings
 
 
 def config(verbose: bool, very_very_verbose: bool, data_path: str):
+    handler = TextualHandler()
+    sqlalchemy_logger = getLogger("sqlalchemy")
+    sqlalchemy_logger.handlers.clear()
+
     if verbose:
-        basicConfig(level=INFO, handlers=[TextualHandler()])
-    if very_very_verbose:
-        basicConfig(level=DEBUG, handlers=[TextualHandler()])
+        basicConfig(level=INFO, handlers=[handler])
+        sqlalchemy_logger.setLevel(INFO)
+    elif very_very_verbose:
+        basicConfig(level=DEBUG, handlers=[handler])
+        sqlalchemy_logger.setLevel(DEBUG)
+    sqlalchemy_logger.addHandler(handler)
     s = Settings()
     s.load(data_path)
     create_db()
-    create_words()
+    fillout_db()
 
 
 def option_data_path(func):
@@ -63,7 +70,7 @@ def app(verbose, very_very_verbose, data_path):
     info("Executing app")
     app = DictApp()
     app.run()
-    sys.exit(app.return_code)
+    exit(app.return_code)
 
 
 @cli.command()
