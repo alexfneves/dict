@@ -38,8 +38,14 @@ def open_file(write: bool):
                 f = open(self._settings_path, "rb")
                 toml = tomllib.load(f)
                 f.close()
+            except FileNotFoundError:
+                info(
+                    f"Failed to open file {self._settings_path}. Giving up on loading settings."
+                )
+                toml = {}
+            try:
                 if write:
-                    f2 = open(self._settings_path, "wb")
+                    f2 = open(self._settings_path, "wb+")
             except FileNotFoundError:
                 info(
                     f"Failed to open file {self._settings_path}. Giving up on saving settings."
