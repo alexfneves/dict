@@ -1,0 +1,5 @@
+.cache
+.devenv
+.direnv
+build
+compile_commands.json
