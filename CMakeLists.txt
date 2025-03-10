@@ -9,7 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(ftxui REQUIRED)
 
 # Add the main source file
-add_executable(ftxui_app src/main.cpp)
+add_executable(dict src/main.cpp)
 
 # Link with FTXUI components
-target_link_libraries(ftxui_app PRIVATE ftxui::screen ftxui::dom ftxui::component)
+target_link_libraries(dict PRIVATE ftxui::screen ftxui::dom ftxui::component)

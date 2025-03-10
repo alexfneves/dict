@@ -43,6 +43,7 @@
                   pkgs.cmake
                   pkgs.clang-tools
                   pkgs.ftxui
+                  pkgs.inotify-tools
                 ];
 
                 git-hooks.excludes = [ ".devenv" ];
@@ -53,7 +54,21 @@
                   nixfmt-rfc-style.enable = true;
                 };
 
-                enterShell = '''';
+                enterShell = ''
+                  echo "Dict dev shell"
+                '';
+
+                scripts.build.exec = ''
+                  cmake -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+                  cmake --build build
+                '';
+                scripts.dict.exec = ''
+                  ./build/dict
+                '';
+
+                scripts.dict-reload.exec = ''
+                  bash scripts/dict-reload;
+                '';
               }
             ];
           };

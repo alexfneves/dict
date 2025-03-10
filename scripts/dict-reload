@@ -1,0 +1,27 @@
+RETRY_FILE="/tmp/retry_flag"
+echo "true" > "$RETRY_FILE"
+
+monitor_files() {
+  while inotifywait -r --exclude '/\..*' -e modify -e create -e delete src; do
+    echo "true" > "$RETRY_FILE"
+    ps -e -o pid,args | grep "dict" | awk '{print $1}' | xargs kill -SIGINT || true
+  done
+}
+
+monitor_files &
+MONITOR_PID=$!
+
+while true; do
+  RETRY=$(cat "$RETRY_FILE")
+  if [ "$RETRY" != "true" ]; then
+    break
+  fi
+
+  echo "false" > "$RETRY_FILE"
+  build && dict
+done
+
+# kill "$MONITOR_PID" 2>/dev/null
+# wait "$MONITOR_PID" 2>/dev/null || true
+kill "$MONITOR_PID"
+wait "$MONITOR_PID" || true
