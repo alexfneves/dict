@@ -2,7 +2,7 @@ RETRY_FILE="/tmp/retry_flag"
 echo "true" > "$RETRY_FILE"
 
 monitor_files() {
-  while inotifywait -r --exclude '/\..*' -e modify -e create -e delete src; do
+  while inotifywait -r --exclude '/\..*' -e modify -e create -e delete src include; do
     echo "true" > "$RETRY_FILE"
     ps -e -o pid,args | grep "dict" | awk '{print $1}' | xargs kill -SIGINT || true
   done
@@ -18,7 +18,13 @@ while true; do
   fi
 
   echo "false" > "$RETRY_FILE"
-  build && dict
+  if build; then
+    dict
+  else
+    echo "Build failed. Retrying in 5 seconds..."
+    echo "true" > "$RETRY_FILE"
+    sleep 5
+  fi
 done
 
 # kill "$MONITOR_PID" 2>/dev/null

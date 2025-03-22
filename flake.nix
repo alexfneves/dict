@@ -44,6 +44,7 @@
                   pkgs.clang-tools
                   pkgs.ftxui
                   pkgs.inotify-tools
+                  pkgs.alacritty-theme
                 ];
 
                 git-hooks.excludes = [ ".devenv" ];
